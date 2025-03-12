@@ -1,59 +1,57 @@
-from fastapi import FastAPI, Request, HTTPException
+# main.py
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import openai
 import os
 
 app = FastAPI()
 
-# ดึงค่า Token จาก Environment
-LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# Setup LINE API
+line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN'))
+handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 
-if not LINE_CHANNEL_ACCESS_TOKEN or not LINE_CHANNEL_SECRET or not OPENAI_API_KEY:
-    raise ValueError("Missing environment variables!")
+# Setup OpenAI API (เวอร์ชัน 0.28.1)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
-handler = WebhookHandler(LINE_CHANNEL_SECRET)
-
-openai.api_key = OPENAI_API_KEY
 
 @app.get("/")
 def read_root():
     return {"status": "Chatbot is running"}
 
+
 @app.post("/webhook")
-async def webhook(request: Request):
-    signature = request.headers.get("X-Line-Signature")
+async def callback(request: Request):
     body = await request.body()
-    
+    signature = request.headers.get('X-Line-Signature', '')
+
     try:
-        handler.handle(body.decode("utf-8"), signature)
-    except InvalidSignatureError:
-        raise HTTPException(status_code=400, detail="Invalid Signature Error")
-    
-    return "OK"
+        handler.handle(body.decode('utf-8'), signature)
+    except Exception as e:
+        print("Error:", e)
+        return JSONResponse(content={"message": "Invalid signature"}, status_code=400)
+    return JSONResponse(content={"message": "OK"}, status_code=200)
+
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_text = event.message.text
-    
-    # ส่งข้อความไปยัง OpenAI GPT-4
+    print(f"User: {user_text}")  # Log สำหรับดูข้อความ
+
     try:
-        gpt_response = openai.ChatCompletion.create(
-            model="gpt-4",
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # เปลี่ยนเป็น gpt-4 ถ้าใช้งานได้
             messages=[
                 {"role": "system", "content": "คุณคือแชทบอทที่ช่วยตรวจสอบวันลาของพนักงาน"},
-                {"role": "user", "content": user_text},
+                {"role": "user", "content": user_text}
             ]
         )
-        reply_text = gpt_response["choices"][0]["message"]["content"]
+        reply_text = response['choices'][0]['message']['content'].strip()
     except Exception as e:
-        reply_text = "ขออภัย ระบบมีข้อผิดพลาด"
+        print("OpenAI Error:", e)
+        reply_text = "ขออภัยค่ะ เกิดข้อผิดพลาดในการประมวลผล"
 
-    # ส่งข้อความกลับไปที่ LINE
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
