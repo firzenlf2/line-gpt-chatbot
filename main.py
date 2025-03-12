@@ -1,9 +1,21 @@
+# main.py
+from fastapi import FastAPI, Request
+from linebot import LineBotApi, WebhookHandler
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from openai import OpenAI
 import os
 
+app = FastAPI()
+
+line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN'))
+handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
+
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# แก้ตรงส่วนนี้
+@app.get("/")
+def read_root():
+    return {"status": "Chatbot is running"}
+
 @app.post("/webhook")
 async def webhook(request: Request):
     body = await request.body()
