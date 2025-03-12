@@ -1,21 +1,9 @@
-# main.py
-from fastapi import FastAPI, Request
-from linebot import LineBotApi, WebhookHandler
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
-import openai
+from openai import OpenAI
 import os
 
-app = FastAPI()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN'))
-handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-@app.get("/")
-def read_root():
-    return {"status": "Chatbot is running"}
-
+# แก้ตรงส่วนนี้
 @app.post("/webhook")
 async def webhook(request: Request):
     body = await request.body()
@@ -26,7 +14,7 @@ async def webhook(request: Request):
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_text = event.message.text
-    gpt_response = openai.ChatCompletion.create(
+    gpt_response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "คุณคือแชทบอทที่ช่วยตรวจสอบวันลาของพนักงาน"},
