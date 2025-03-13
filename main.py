@@ -5,6 +5,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import os
 import httpx  # ใช้ httpx แทน requests
 
+# Initialize FastAPI
 app = FastAPI()
 
 # LINE API
@@ -13,24 +14,28 @@ handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 
 # DeepSeek API
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"  # URL สมมติ (เช็คของจริงใน dashboard)
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"  # ตรวจสอบ URL จริงอีกที
 
+# Health check endpoint
 @app.get("/")
 def read_root():
     return {"status": "Chatbot is running"}
 
+# LINE Webhook endpoint
 @app.post("/webhook")
 async def webhook(request: Request):
     body = await request.body()
     signature = request.headers['X-Line-Signature']
     handler.handle(body.decode('utf-8'), signature)
-    return 'OK'
+    return "OK"
 
+# Handle incoming message from LINE
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_text = event.message.text
     reply = call_deepseek_api(user_text)
 
+    # Reply to LINE user
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply)
