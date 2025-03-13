@@ -14,7 +14,7 @@ handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 
 # DeepSeek API
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"  # ตรวจสอบ URL จริงอีกที
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/models/deepseek-chat/completions"
 
 # Health check endpoint
 @app.get("/")
