@@ -1,4 +1,3 @@
-# main.py
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from linebot import LineBotApi, WebhookHandler
@@ -6,13 +5,13 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import openai
 import os
 
-app = FastAPI()
+app = FastAPI()  # <<< สำคัญมาก
 
-# Setup LINE API
+# LINE Bot API
 line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN'))
 handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 
-# Setup OpenAI API (เวอร์ชัน 0.28.1)
+# OpenAI API
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
@@ -37,11 +36,11 @@ async def callback(request: Request):
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_text = event.message.text
-    print(f"User: {user_text}")  # Log สำหรับดูข้อความ
+    print(f"User: {user_text}")  # Log ข้อความที่พิมพ์
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # เปลี่ยนเป็น gpt-4 ถ้าใช้งานได้
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "คุณคือแชทบอทที่ช่วยตรวจสอบวันลาของพนักงาน"},
                 {"role": "user", "content": user_text}
@@ -52,6 +51,7 @@ def handle_message(event):
         print("OpenAI Error:", e)
         reply_text = "ขออภัยค่ะ เกิดข้อผิดพลาดในการประมวลผล"
 
+    # ส่งกลับไปหา LINE User
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
