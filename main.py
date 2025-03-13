@@ -15,7 +15,7 @@ handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # ✅ Choose model here (ex: "gpt-4o", "gpt-4", "gpt-3.5-turbo")
-OPENAI_MODEL = "gpt-4o"
+OPENAI_MODEL = "gpt-3.5-turbo"
 
 # Health check endpoint
 @app.get("/")
