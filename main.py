@@ -35,7 +35,7 @@ def handle_message(event):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # หรือ gpt-4 ถ้าใช้รุ่นนั้น
+            model="gpt-4o",  
             messages=[
                 {"role": "system", "content": "คุณคือแชทบอทที่ช่วยตรวจสอบวันลาของพนักงาน"},
                 {"role": "user", "content": user_text}
