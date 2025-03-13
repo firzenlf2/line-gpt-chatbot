@@ -1,9 +1,8 @@
-# main.py
+import os
+import httpx
 from fastapi import FastAPI, Request
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-import os
-import httpx  # ใช้ httpx แทน requests
 
 # Initialize FastAPI
 app = FastAPI()
@@ -14,7 +13,7 @@ handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
 
 # DeepSeek API
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-DEEPSEEK_API_URL = "https://api.deepseek.com/v1/models/deepseek-chat/completions"
+DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 
 # Health check endpoint
 @app.get("/")
@@ -34,8 +33,6 @@ async def webhook(request: Request):
 def handle_message(event):
     user_text = event.message.text
     reply = call_deepseek_api(user_text)
-
-    # Reply to LINE user
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply)
@@ -51,12 +48,12 @@ def call_deepseek_api(prompt):
     }
 
     payload = {
-        "model": "deepseek-chat",  # เปลี่ยน model ที่เหมาะสม เช่น "deepseek-coder"
+        "model": "deepseek-chat",  # ใช้ model ที่ DeepSeek แนะนำ
         "messages": [
             {"role": "system", "content": "คุณคือแชทบอทสำหรับช่วยตรวจสอบวันลาพนักงาน"},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.7
+        "stream": False
     }
 
     try:
